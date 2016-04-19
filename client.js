@@ -1,4 +1,6 @@
-var server = require('http').createServer();
+var express = require('express');
+var app = express();
+var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var connectedClients = [];
 var redis = require('redis');
@@ -39,9 +41,12 @@ io.on('connection', function(socket) {
         // emit last ten messages on subscribing to socket
     });
 
-    socket.on('chat message', function(msg) {
+    socket.on('chat message', function(message) {
         // channel, author, text, timestamp
+        var msg = {};
+        msg.message = message;
         msg.origin = socket.id;
+        msg.created_at = new Date();
         publisher.publish(MSG_CHANNEL, JSON.stringify(msg));
     });
 
@@ -53,7 +58,9 @@ io.on('connection', function(socket) {
     });
 });
 
+app.use(express.static(__dirname + '/public'));
 
 
-
-server.listen(port);
+server.listen(port, function() {
+    console.log('Server started on port: ' + port);
+});
